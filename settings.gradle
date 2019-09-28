@@ -1,0 +1,2 @@
+include ':app', ':ccplayerlib'
+rootProject.name='CCPlayerDemo'
