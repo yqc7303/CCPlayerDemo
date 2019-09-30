@@ -28,12 +28,7 @@ class DiyPlayerActivity : AppCompatActivity(),CCPlayer.CallBack,TextureView.Surf
         tv_paly_video.surfaceTextureListener = this
     }
 
-
-    override fun getPlayer(player: MediaPlayer) {
-    }
-
     override fun onInfo(mp: MediaPlayer, what: Int, extra: Int) {
-        Toast.makeText(this, what.toString(), Toast.LENGTH_LONG).show()
     }
 
     override fun onPlayError(errorCode: String, errorMessage: String, detailMessage: String) {
@@ -72,5 +67,10 @@ class DiyPlayerActivity : AppCompatActivity(),CCPlayer.CallBack,TextureView.Surf
         surface = Surface(p0)
         val videoId = intent.getStringExtra("videoId")
         CCPlayer.instance.diyPlayer(videoId,this)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        CCPlayer.instance.clearPlayer()
     }
 }

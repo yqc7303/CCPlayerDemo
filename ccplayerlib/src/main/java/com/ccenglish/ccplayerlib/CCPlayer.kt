@@ -14,11 +14,9 @@ import com.ccenglish.ccplayerlib.util.ConfigUtil
  */
 class CCPlayer{
 
-    private var drmServer: DRMServer? = null
+    var apiKey = ""
 
-    private var drmServerPort: Int = 0
-
-    private var context:Application? = null
+    var userId = ""
 
     companion object {
 
@@ -40,16 +38,25 @@ class CCPlayer{
 
     }
 
+    private var drmServer: DRMServer? = null
+
+    private var drmServerPort: Int = 0
+
+    private var context:Application? = null
+
+    private var player:DWMediaPlayer? = null
+
     /**
      * 使用默认的apikey、userId
      */
     fun register(context: Application){
-        this.context = context
-        startDRMServer()
+        register(context,ConfigUtil.API_KEY,ConfigUtil.USERID)
     }
 
     fun register(context: Application, apiKey:String, userId:String){
         this.context = context
+        this.apiKey = apiKey
+        this.userId = userId
         startDRMServer()
     }
 
@@ -91,29 +98,29 @@ class CCPlayer{
 
 
     /**
-     * 获得MediaPlayer
+     * 自定义播放页面是,获得MediaPlayer
      */
-    fun diyPlayer(userId: String,callBack: CallBack){
-        val player = DWMediaPlayer()
-        player.reset()
+    fun diyPlayer(videoId: String,callBack: CallBack){
+        player = DWMediaPlayer()
+        player?.reset()
         //设置MediaPlayer的DRM服务端口号
-        player.setDRMServerPort(getDrmServerPort())
+        player?.setDRMServerPort(getDrmServerPort())
 
-        player.setVideoPlayInfo(userId, ConfigUtil.USERID, ConfigUtil.API_KEY, "",context)
+        player?.setVideoPlayInfo(videoId, userId, apiKey, "",context)
 
 
-        //prepareAsync()前，调用DRMServer的reset()方法重置drmserver的设置。
+        //player prepareAsync()前，调用DRMServer的reset()方法重置drmserver的设置。
         drmServer?.reset()
-        player.prepareAsync()
+        player?.prepareAsync()
 
 
         //设置各种监听回调
-        player.setOnErrorListener{mp,what,extra->
+        player?.setOnErrorListener{mp,what,extra->
             callBack.onError(mp,what,extra)
             true
         }
 
-        player.setOnDreamWinErrorListener{
+        player?.setOnDreamWinErrorListener{
             val error = when(it.errorCode.Value()){
                 -10 -> "NETWORK_ERROR"
                 -11 -> "PROCESS_FAIL"
@@ -125,22 +132,34 @@ class CCPlayer{
             callBack.onPlayError(error,it.message?:"",it.detailMessage)
         }
 
-        player.setOnInfoListener{mp,what,extra->
+        player?.setOnInfoListener{mp,what,extra->
             callBack.onInfo(mp,what,extra)
             false
         }
 
-        player.setOnBufferingUpdateListener{mp,precent->
+        player?.setOnBufferingUpdateListener{mp,precent->
             callBack.onBufferingUpdate(mp,precent)
         }
 
-        player.setOnPreparedListener {
+        player?.setOnPreparedListener {
             callBack.onPrepared(it)
         }
     }
 
+    fun clearPlayer(){
+        if(player != null){
+            player?.reset()
+            player?.release()
+            player = null
+        }
+        //停止当前流
+        drmServer?.disconnectCurrentStream()
+    }
+
+    /**
+     * 获取DWMediaPlayer的相关回调
+     */
     interface CallBack{
-        fun getPlayer(player:MediaPlayer)
 
         /**
          * @what 可以表示player加载状态等，DWMediaPlayer.MEDIA_INFO_BUFFERING_START、END。可用于加载时一些业务处理，如进度条

@@ -13,13 +13,17 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         btn_simple_player.setOnClickListener {
-            startActivity(Intent(this, DefaultPlayerActivity::class.java).apply {
+            DefaultPlayerActivity.startAction(this,"83CFD26BAB4E1FE49C33DC5901307461")
+        }
+
+        btn_reuse_player.setOnClickListener {
+            startActivity(Intent(this, ReusePlayerActivity::class.java).apply {
                 putExtra("videoId", "83CFD26BAB4E1FE49C33DC5901307461")
             })
         }
 
         btn_diy_player.setOnClickListener {
-            startActivity(Intent(this, DiyPlayerActivity2::class.java).apply {
+            startActivity(Intent(this, DiyPlayerActivity::class.java).apply {
                 putExtra("videoId", "83CFD26BAB4E1FE49C33DC5901307461")
             })
         }

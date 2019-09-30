@@ -10,19 +10,30 @@
         android:id="@+id/btn_simple_player"
         android:layout_width="0dp"
         android:layout_height="50dp"
+        android:layout_marginTop="16dp"
+        android:text="简单播放"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        android:text="简单播放"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <Button
+        android:id="@+id/btn_reuse_player"
+        android:layout_width="0dp"
+        android:layout_height="50dp"
+        android:layout_marginTop="8dp"
+        android:text="复用播放"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btn_simple_player" />
 
     <Button
         android:id="@+id/btn_diy_player"
         android:layout_width="0dp"
         android:layout_height="50dp"
-        android:layout_marginTop="16dp"
-        android:text="自定义界面播放"
+        android:layout_marginTop="8dp"
+        android:text="自定义播放"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btn_simple_player" />
+        app:layout_constraintTop_toBottomOf="@+id/btn_reuse_player" />
 </androidx.constraintlayout.widget.ConstraintLayout>

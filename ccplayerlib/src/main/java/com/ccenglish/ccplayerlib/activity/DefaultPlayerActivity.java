@@ -28,11 +28,8 @@ import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.bokecc.sdk.mobile.exception.DreamwinException;
 import com.bokecc.sdk.mobile.play.DWMediaPlayer;
-import com.bokecc.sdk.mobile.play.OnDreamWinErrorListener;
 import com.ccenglish.ccplayerlib.CCPlayer;
 import com.ccenglish.ccplayerlib.R;
 import com.ccenglish.ccplayerlib.util.ConfigUtil;
@@ -47,13 +44,14 @@ import java.util.TimerTask;
 
 
 /**
+ * Created by yangqc on 2019-09-29.
  * 默认视频播放界面
  */
 public class DefaultPlayerActivity extends Activity implements
         DWMediaPlayer.OnBufferingUpdateListener,
         DWMediaPlayer.OnInfoListener,
         DWMediaPlayer.OnPreparedListener, DWMediaPlayer.OnErrorListener,
-        SurfaceHolder.Callback, OnDreamWinErrorListener {
+        SurfaceHolder.Callback, MediaPlayer.OnCompletionListener {
 
     private DWMediaPlayer player;
     private SurfaceView surfaceView;
@@ -81,16 +79,15 @@ public class DefaultPlayerActivity extends Activity implements
     private Boolean isPlaying;
     //当player未准备好，并且当前activity经过onPause()生命周期时，此值为true
     private boolean isFreeze = false;
-    private boolean isSurfaceDestroy = false;
     int currentPosition;
     String path;
 
-    private CCPlayer demoApplication;
+    private CCPlayer ccplayer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
-        demoApplication = CCPlayer.Companion.getInstance();
+        ccplayer = CCPlayer.Companion.getInstance();
         // 隐藏标题
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         // 设置全屏
@@ -105,6 +102,12 @@ public class DefaultPlayerActivity extends Activity implements
         initPlayInfo();
 
         super.onCreate(savedInstanceState);
+    }
+
+    public static void startAction(Context context, String videoId) {
+        Intent intent = new Intent(context, DefaultPlayerActivity.class);
+        intent.putExtra("videoId", videoId);
+        context.startActivity(intent);
     }
 
     private void initView() {
@@ -160,8 +163,8 @@ public class DefaultPlayerActivity extends Activity implements
                 }
 
                 // 更新播放进度
-                int position =  player.getCurrentPosition();
-                int duration =  player.getDuration();
+                int position = player.getCurrentPosition();
+                int duration = player.getDuration();
                 //更新播放进度
                 currentPosition = position;
 
@@ -170,7 +173,7 @@ public class DefaultPlayerActivity extends Activity implements
                     playDuration.setText(ParamsUtil.millsecondsToStr(player.getCurrentPosition()));
                     skbProgress.setProgress((int) pos);
                 }
-
+                onPlayProgress(position, duration);
             }
 
             ;
@@ -206,13 +209,13 @@ public class DefaultPlayerActivity extends Activity implements
         isLocalPlay = intent.getBooleanExtra("isLocalPlay", false);
 
         // DRM加密播放
-        player.setDRMServerPort(demoApplication.getDrmServerPort());
+        player.setDRMServerPort(ccplayer.getDrmServerPort());
 
         try {
 
             if (!isLocalPlay) {// 播放线上视频
 
-                player.setVideoPlayInfo(videoId, ConfigUtil.USERID, ConfigUtil.API_KEY, verificationCode, this);
+                player.setVideoPlayInfo(videoId, ccplayer.getUserId(), ccplayer.getApiKey(), verificationCode, this);
 
             } else {// 播放本地已下载视频
                 if (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())) {
@@ -241,16 +244,16 @@ public class DefaultPlayerActivity extends Activity implements
         try {
             player.setDisplay(surfaceHolder);
 
-            player.setOnDreamWinErrorListener(this);
             player.setOnInfoListener(this);
             player.setOnBufferingUpdateListener(this);
             player.setOnPreparedListener(this);
             player.setOnErrorListener(this);
+            player.setOnCompletionListener(this);
 
             if (isLocalPlay) {
                 player.setOfflineVideoPath(path, this);
             }
-            demoApplication.getDRMServer().reset();
+            ccplayer.getDRMServer().reset();
             player.prepareAsync();
 
         } catch (Exception e) {
@@ -274,7 +277,6 @@ public class DefaultPlayerActivity extends Activity implements
         }
 
         isPrepared = false;
-        isSurfaceDestroy = true;
 
         player.stop();
         player.reset();
@@ -393,7 +395,6 @@ public class DefaultPlayerActivity extends Activity implements
     };
 
 
-
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
         // 监测音量变化
@@ -470,7 +471,7 @@ public class DefaultPlayerActivity extends Activity implements
             player.release();
             player = null;
         }
-        demoApplication.getDRMServer().disconnectCurrentStream();
+        ccplayer.getDRMServer().disconnectCurrentStream();
         super.onDestroy();
     }
 
@@ -501,12 +502,26 @@ public class DefaultPlayerActivity extends Activity implements
     }
 
     @Override
-    public void onPlayError(final DreamwinException e) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        });
+    public void onCompletion(MediaPlayer mediaPlayer) {
     }
+
+    /**
+     * 供子类复写调用
+     */
+    public void onPlayProgress(int position, int duration) {
+
+    }
+
+    /**
+     * isPrepared、isPlaying暴露给子类
+     */
+    public boolean isPrepared() {
+        return isPrepared;
+    }
+
+    public Boolean getPlaying() {
+        return isPlaying;
+    }
+
+
 }
